@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+	<ProductVersion>10.0.20506</ProductVersion>
+	<SchemaVersion>2.0</SchemaVersion>
+	<ProjectGuid>{71B563D0-4BA6-9ECB-D0E8-14330215C748}</ProjectGuid>
+	<OutputType>Library</OutputType>
+	<AppDesignerFolder>Properties</AppDesignerFolder>
+	<RootNamespace></RootNamespace>
+	<AssemblyName>Assembly-CSharp</AssemblyName>
+	<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+	<FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	<DebugSymbols>true</DebugSymbols>
+	<DebugType>full</DebugType>
+	<Optimize>false</Optimize>
+	<OutputPath>Temp\bin\Debug\</OutputPath>
+	<DefineConstants>DEBUG;TRACE;UNITY_ANDROID;ENABLE_MICROPHONE;ENABLE_IMAGEEFFECTS;ENABLE_WEBCAM;ENABLE_AUDIO_FMOD;ENABLE_NETWORK;ENABLE_MONO;ENABLE_PHYSICS;ENABLE_TERRAIN;ENABLE_CACHING;ENABLE_GENERICS;UNITY_ANDROID_API;ENABLE_CLOTH;ENABLE_AUDIO;ENABLE_WWW;ENABLE_SHADOWS;UNITY_4_0_0;UNITY_4_0;ENABLE_PROFILER;UNITY_EDITOR;UNITY_TEAM_LICENSE;Grid</DefineConstants>
+	<ErrorReport>prompt</ErrorReport>
+	<WarningLevel>4</WarningLevel>
+	<NoWarn>0169</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	<DebugType>pdbonly</DebugType>
+	<Optimize>true</Optimize>
+	<OutputPath>Temp\bin\Release\</OutputPath>
+	<DefineConstants>TRACE</DefineConstants>
+	<ErrorReport>prompt</ErrorReport>
+	<WarningLevel>4</WarningLevel>
+	<NoWarn>0169</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+	<Reference Include="System" />
+    <Reference Include="System.XML" />
+	<Reference Include="System.Core" />
+	<Reference Include="UnityEngine">
+	  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityEditor">
+	  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
+	</Reference>
+  </ItemGroup>
+  <ItemGroup>
+     <Compile Include="Assets\Extensions\CCSoft\API\VK\VKAPI.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\VK\VKImageUploader.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\base\ISocialAPI.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\base\SocialAPI.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\data\ApiType.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\data\SEX.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\data\SocialApiEvent.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\data\sApiShortUserInfo.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\data\sApiUserInfo.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\lib\ExternalStackTask.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\lib\IFrameLib.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\lib\testtt.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\API\localEmul\LocalEmulatedAPI.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Base\CoroutineThread.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Base\Interfaces\ISingleton.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Debug\DebugConsole.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Debug\DirectionTraser.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Debug\HUDFPS.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Events\EasyEventDispatcher.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Events\EventDispathcer.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Test\TestBehavior.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\AnimationExtensions.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\AssetLoader.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\JSON.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\KeyBoard.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\LayerMaskExtensions.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\TextureUtil.cs" />
+     <Compile Include="Assets\Extensions\CCSoft\Utils\WWWUtil.cs" />
+     <Compile Include="Assets\Scripts\EggUtility.cs" />
+     <Compile Include="Assets\Scripts\GameMain.cs" />
+     <Compile Include="Assets\Scripts\OnTouchDown.cs" />
+     <Compile Include="Assets\Scripts\SelectionEdgeCheck.cs" />
+     <Compile Include="Assets\Scripts\SimpleEgg.cs" />
+     <Compile Include="Assets\iTween\Plugins\iTween.cs" />
+     <Compile Include="Assets\iTween\Sample\MoveSample.cs" />
+     <Compile Include="Assets\iTween\Sample\RotateSample.cs" />
+     <Compile Include="Assets\iTween\Sample\SampleInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+	   Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  
+</Project>
