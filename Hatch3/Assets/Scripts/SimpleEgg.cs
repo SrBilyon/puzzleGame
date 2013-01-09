@@ -22,7 +22,7 @@ public class SimpleEgg : MonoBehaviour
     /// Bumped - The Egg is being pushed
     /// </summary>
     /// 
-    public enum EggState { Waiting, Active, Selected, Resting, Falling, Bumped }
+    public enum EggState { Waiting, Active, Selected, Resting, Falling, Sliding }
     public EggState eggState = EggState.Waiting;
 
     public enum BumpDirection { Up, Down, Left, Right }
@@ -74,6 +74,8 @@ public class SimpleEgg : MonoBehaviour
     /// </summary>
     void Update()
     {
+        CheckAllNeighbors();
+
         switch (eggState)
         {
             case EggState.Falling:
@@ -85,14 +87,6 @@ public class SimpleEgg : MonoBehaviour
             case EggState.Resting:
                 CheckAllNeighbors();
                 DestroyMatching(gridCoord);
-
-                BumpNeighbors();
-                break;
-
-            case EggState.Bumped:
-                Toss(bumpDirection, gridCoord);
-                BumpNeighbors();
-                Drop(gridCoord);
                 break;
 
             case EggState.Selected:
@@ -107,9 +101,14 @@ public class SimpleEgg : MonoBehaviour
 
             case EggState.Active:
                 break;
+
+            case EggState.Sliding:
+                CheckAllNeighbors();
+                Slide();
+                break;
         }
 
-        if (eggState != EggState.Waiting &&  eggState != EggState.Active && eggState != EggState.Selected)
+        if (eggState != EggState.Waiting && eggState != EggState.Active && eggState != EggState.Selected && eggState != EggState.Sliding)
         {
             if (!CheckIfGrounded())
             {
@@ -118,13 +117,116 @@ public class SimpleEgg : MonoBehaviour
             else
             {
                 eggState = EggState.Resting;
-
             }
 
-            CheckAllNeighbors();
-
         }
+    }
 
+    /// <summary>
+    /// An event called when the mouse or touch hits this object
+    /// </summary>
+    public void OnMouseDown()
+    {
+        //Make sure the egg I'm clicking 
+        if (GameMain.currentEgg == this)
+            eggState = EggState.Active;
+
+        //Be able to select the egg only if it's the selected egg
+        if (eggState == EggState.Active)
+        {
+            eggState = EggState.Selected;
+        }
+    }
+
+    /// <summary>
+    /// An event called when the user unselects the mouse buttom
+    /// </summary>
+    public void OnMouseUp()
+    {
+        //If this egg is the selected one...
+        if (eggState == EggState.Selected)
+        {
+            //1. Get the slot that the egg should be dropping into
+            var gridInt = GameMain.GetGridSlotIndex(GameMain.currentEggDropCoords);
+            gridCoord = GameMain.GetGridCoord(gridInt);
+
+            //2. Set the grid coord to the position we are wanting to get in
+            PositionToGrid(new Vector2(gridCoord.x, gridCoord.y));
+
+            //3. Check to see if there is an egg in the slot we are trying to place
+            //this egg in
+            if (EggUtility.IsEggInSlot(gridCoord))
+            {
+                if (gridCoord.x == 0)
+                {
+                    if (nRight.trappedLeft)
+                    {
+                        ReturnToCurrentSlot();
+                    } 
+                    
+                }
+                else if (gridCoord.x == GameMain.colCount - 1)
+                {
+                    if (nLeft.trappedRight)
+                    {
+                        ReturnToCurrentSlot();
+                    } 
+                }
+                else
+                ReturnToCurrentSlot();
+
+                return;
+            }
+
+            //4. Tag the egg. This egg can now be searched using GetEggs()
+            tag = "Egg";
+
+            //5. Start the egg off in a falling state
+            if (!CheckIfGrounded())
+            {
+                eggState = EggState.Falling;
+            }
+            else
+                //6. Check to see where the egg is going
+                if (gridCoord.x == 0 && CheckIfGrounded()) //Left Side
+                {
+                    trappedLeft = true; trappedRight = false;
+                    //The direction the egg is coming in from
+                    moveDirection = MoveDirection.Right;
+                    eggState = EggState.Sliding;
+                }
+                else //If on the right side
+                    if (gridCoord.x == GameMain.colCount - 1 && CheckIfGrounded())
+                    {
+                        trappedRight = true; trappedLeft = false;
+                        moveDirection = MoveDirection.Left;
+                        eggState = EggState.Sliding;
+                    }
+                    else if (gridCoord.y != 0)
+                    {
+                        eggState = EggState.Falling;
+                    }
+
+            //Replace the current egg with the one in the next egg pool
+            GameMain.currentEgg = GameMain.nextEgg;
+
+            //Create a new next egg
+            GameMain.nextEgg = Instantiate(EggUtility.CreateNewEgg()) as SimpleEgg;
+
+            //Place all the eggs in the right position
+            GameMain.currentEgg.transform.position = new Vector3(GameMain.currentEggHolder.transform.position.x, GameMain.currentEggHolder.transform.position.y, -3);
+            GameMain.nextEgg.transform.position = new Vector3(GameMain.nextEggHolder.transform.position.x, GameMain.nextEggHolder.transform.position.y, -3);
+        }
+    }
+
+    /// <summary>
+    /// Move this egg to a new location
+    /// </summary>
+    public void PositionToGrid(Vector2 grid)
+    {
+        gridCoord = grid;
+        gridIndex = GameMain.GetGridSlotIndex(gridCoord);
+        transform.position = new Vector3(gridCoord.x, gridCoord.y, -5);
     }
 
     private bool CheckIfGrounded()
@@ -153,99 +255,6 @@ public class SimpleEgg : MonoBehaviour
         eggState = EggState.Waiting;
         gridCoord = new Vector2(-1, -1);
         GameMain.currentEgg.transform.position = new Vector3(GameMain.currentEggHolder.transform.position.x, GameMain.currentEggHolder.transform.position.y, -3);
-    }
-
-    /// <summary>
-    /// An event called when the mouse or touch hits this object
-    /// </summary>
-    public void OnMouseDown()
-    {
-        //Make sure the egg I'm clicking 
-        if (GameMain.currentEgg == this)
-            eggState = EggState.Active;
-
-        //Be able to select the egg only if it's the selected egg
-        if (eggState == EggState.Active)
-        {
-            eggState = EggState.Selected;
-        }
-    }
-
-    /// <summary>
-    /// An event called when the user unselects the mouse buttom
-    /// </summary>
-    public void OnMouseUp()
-    {
-        //If this egg is the selected one...
-        if (eggState == EggState.Selected)
-        {
-            //Get the slot that the egg should be dropping into
-            var gridInt = GameMain.GetGridSlotIndex(GameMain.currentEggDropCoords);
-            gridCoord = GameMain.GetGridCoord(gridInt);
-
-            //Set the grid coord to the position we are wanting to get in
-            PositionToGrid(new Vector2(gridCoord.x, gridCoord.y));
-
-            //Check to see if there is an egg in the slot we are trying to place
-            //this egg in
-            if (EggUtility.IsEggInSlot(gridCoord))
-            {
-                ReturnToCurrentSlot();
-                return;
-            }
-   
-
-            //Tag the egg
-            tag = "Egg";
-
-            bumpDirection = BumpDirection.Down;
-
-            //Check to see if we are on the left side or the right side
-            if (gridCoord.x == 0)
-            {
-                trappedLeft = true; trappedRight = false;
-                bumpDirection = BumpDirection.Right;
-                eggState = EggState.Bumped;
-            }
-            
-            if (gridCoord.x == GameMain.colCount - 1)
-            {
-                trappedRight = true; trappedLeft = false;
-                bumpDirection = BumpDirection.Left;
-                eggState = EggState.Bumped;
-            }
-            else
-            {
-                trappedRight = false; trappedLeft = false;
-                eggState = EggState.Falling;
-            }
-
-            //Change the egg to the state of resting
-            //if (!IsSomethingUnderneath(gridCoord))
-            
-            //else
-            //    eggState = EggState.Falling;
-
-            //Replace the current egg with the one in the next egg pool
-            GameMain.currentEgg = GameMain.nextEgg;
-
-            //Create a new next egg
-            GameMain.nextEgg = Instantiate(EggUtility.CreateNewEgg()) as SimpleEgg;
-
-            //Place all the eggs in the right position
-            GameMain.currentEgg.transform.position = new Vector3(GameMain.currentEggHolder.transform.position.x, GameMain.currentEggHolder.transform.position.y, -3);
-            GameMain.nextEgg.transform.position = new Vector3(GameMain.nextEggHolder.transform.position.x, GameMain.nextEggHolder.transform.position.y, -3);
-        }
-    }
-
-    /// <summary>
-    /// Move this egg to a new location
-    /// </summary>
-    public void PositionToGrid(Vector2 grid)
-    {
-        gridCoord = grid;
-        gridIndex = GameMain.GetGridSlotIndex(gridCoord);
-        transform.position = new Vector3(gridCoord.x, gridCoord.y, -5);
     }
 
     #region Check Surrounding Eggs
@@ -388,56 +397,48 @@ public class SimpleEgg : MonoBehaviour
     /// 
     void Drop(Vector2 grid)
     {
-        //eggState = EggState.Falling;
-
-        //Move the cube drown
-        while (!CheckIfGrounded())
+        //Not in the last row
+        if (!CheckIfOnLastRow())
         {
-            //yield return new WaitForSeconds(0.05f);
-
-            //Make sure I'm not in the last row
-            if (!CheckIfOnLastRow())
+            // Not grounded
+            if (!CheckIfGrounded())
             {
-                //I landed on something
-                if (CheckIfGrounded())
-                {
-                    eggState = EggState.Resting;
-                    break;
-                }
-                //Falling
-                else if (!CheckIfGrounded())
-                {
-                    PositionToGrid(new Vector2(gridCoord.x, gridCoord.y - 1));
-                }
-            }
-            else if (CheckIfGrounded())
-            {
-                eggState = EggState.Resting;
-
-                if (IsSomethingAbove(gridCoord))
-                {
-                    break;
-                }
-                else if (!CheckIfGrounded())
-                {
-                    PositionToGrid(new Vector2(gridCoord.x, gridCoord.y));
-                    break;
-                }
-                break;
-            }
-
-            //If I'm on the very top and nothing is under me
-            else if (CheckIfOnLastRow())
-            {
-                if (CheckIfGrounded())
-                {
-                    PositionToGrid(new Vector2(gridCoord.x, gridCoord.y));
-                    bumpDirection = BumpDirection.Down;
-                    eggState = EggState.Resting;
-                    break;
-                }
+                //If I'm not on the ground and there is nothing under me
                 PositionToGrid(new Vector2(gridCoord.x, gridCoord.y - 1));
             }
+            else
+            {
+                //Grounded
+                if (freshEgg)
+                    freshEgg = false;
+
+                eggState = EggState.Resting;
+            }
+        }
+        else if (CheckIfGrounded())
+        {
+            eggState = EggState.Resting;
+
+            if (!CheckIfGrounded())
+            {
+                PositionToGrid(new Vector2(gridCoord.x, gridCoord.y));
+            }
+        }
+
+        //If I'm on the very top and nothing is under me
+        else if (CheckIfOnLastRow())
+        {
+            if (CheckIfGrounded())
+            {
+                //Grounded
+                if (freshEgg)
+                    freshEgg = false;
+
+                PositionToGrid(new Vector2(gridCoord.x, gridCoord.y));
+                bumpDirection = BumpDirection.Down;
+                eggState = EggState.Resting;
+            }
+            PositionToGrid(new Vector2(gridCoord.x, gridCoord.y - 1));
         }
     }
 
@@ -448,142 +449,73 @@ public class SimpleEgg : MonoBehaviour
     /// <param name="grid"></param>
     public void Toss(BumpDirection direction, Vector2 grid)
     {
-        //if (eggState != EggState.Falling && eggState != EggState.Resting)
-        //{
-            if (direction == BumpDirection.Left)
-            {
-                //While the slot left of me isn't the edge
-                while ((grid.x) > 0)
-                {
-                    trappedLeft = false; atEdge = false;
-
-                    //Slide if there isn't anything to the left of me
-                    if (!IsSomethingLeftOfMe(grid) && !trappedLeft)
-                    {
-                        //And either there isn't anything under and I'm not at the bottom
-                        if (!CheckIfGrounded())
-                        {
-                            eggState = EggState.Falling;
-                            break;
-                        }
-                        else
-                        //If I'm at the bottom of the grid
-                        if (CheckIfGrounded())
-                        {
-                            //eggState = EggState.Resting;
-                            PositionToGrid(new Vector2(grid.x - 1, grid.y));
-                            break;
-                        }
-
-                        //Start sliding me over to the left
-                        //PositionToGrid(new Vector2(grid.x - 1, grid.y));
-                        break;
-                    }
-                    else if (IsSomethingLeftOfMe(grid))//If I bumped into something on the left
-                    {
-                        if (!nLeft.trappedLeft)
-                        {
-                            nLeft.bumpDirection = BumpDirection.Left;
-                            nLeft.eggState = EggState.Bumped;
-                            eggState = EggState.Bumped;
-                        }
-                        else
-                        {
-                            //eggState = EggState.Resting;
-                        }
-                        break;
-                    }
-                }
-
-                //If I'm on the left edge
-                if (grid.x == 0)
-                {
-                    //bumpDirection = BumpDirection.Down;
-                    trappedLeft = true;
-                    atEdge = true;
-                    //eggState = EggState.Resting;
-                }
-                else
-                {
-                    trappedLeft = false;
-                    atEdge = false;
-                }
-            }
-            else
-                if (direction == BumpDirection.Right)
-                {
-                    //While the slot right of me isn't the edge
-                    while ((grid.x) < GameMain.colCount - 1)
-                    {
-                        trappedRight = false; atEdge = false;
-
-                        //If there isn't anything to the right of me
-                        if (!IsSomethingRightOfMe(grid))
-                        {
-                            //And either there isn't anything under and I'm not at the bottom
-                            if (!IsSomethingUnderneath(gridCoord) && grid.y != 0)
-                            {
-                                eggState = EggState.Falling;
-                                break;
-                            }
-                            //If I'm at the bottom of the grid
-                            if (gridCoord.y == 0)
-                            {
-                                PositionToGrid(new Vector2(grid.x + 1, grid.y));
-                                break;
-                            }
-
-                            //Start sliding me over to the right
-                            PositionToGrid(new Vector2(grid.x + 1, grid.y));
-                            break;
-                        }
-                        else //If I bumped into something on the right
-                        {
-                            if (!nRight.atEdge)
-                            {
-                                nRight.bumpDirection = BumpDirection.Right;
-                                nRight.eggState = EggState.Bumped;
-                            }
-                            eggState = EggState.Falling;
-                            break;
-                        }
-                    }
-                    //If I'm on the right edge
-                    if (grid.x == GameMain.colCount - 1)
-                    {
-                        bumpDirection = BumpDirection.Down;
-                        trappedRight = true;
-                        eggState = EggState.Resting;
-                        atEdge = true;
-                    }
-                    else
-                    {
-                        trappedRight = false;
-                        atEdge = false;
-                    }
-          //      }
+        switch (nLeft.bumpDirection)
+        {
+            case BumpDirection.Left:
+                if (!IsSomethingLeftOfMe(gridCoord))
+                    nLeft.PositionToGrid(new Vector2(grid.x - 1, grid.y));
+                break;
+        }
+        switch (nRight.bumpDirection)
+        {
+            case BumpDirection.Right:
+                if (!IsSomethingRightOfMe(gridCoord))
+                    nRight.PositionToGrid(new Vector2(grid.x + 1, grid.y));
+                break;
         }
     }
 
-    private void BumpNeighbors()
+    public void Slide()
     {
-        if (bumpDirection == BumpDirection.Left)
+        //if (freshEgg)
+        //    return;
+        if (!CheckIfGrounded())
         {
-            if (nLeft != null)
-            {
-                nLeft.bumpDirection = BumpDirection.Left;
-                nLeft.eggState = EggState.Bumped;
-            }
+            eggState = EggState.Falling;
+            return;
         }
-        else
-            if (bumpDirection == BumpDirection.Right)
-            {
-                if (nRight != null)
+
+        switch (moveDirection)
+        {
+            case MoveDirection.Left:
+                if (!IsSomethingLeftOfMe(gridCoord) && gridCoord.x > 0)
+                    PositionToGrid(new Vector2(gridCoord.x - 1, gridCoord.y));
+                else if (IsSomethingLeftOfMe(gridCoord))
                 {
-                    nRight.bumpDirection = BumpDirection.Right;
-                    nRight.eggState = EggState.Bumped;
+                    if (!nLeft.trappedLeft)
+                    {
+                        nLeft.eggState = EggState.Sliding;
+                        nLeft.moveDirection = MoveDirection.Left;
+
+                        if (!nLeft.IsSomethingLeftOfMe(gridCoord) && nLeft.gridCoord.x > 0)
+                            nLeft.PositionToGrid(new Vector2(nLeft.gridCoord.x - 1, nLeft.gridCoord.y));
+                    }
+                    else
+                    {
+                        trappedLeft = true; trappedRight = false;
+                    }
                 }
-            }
+                break;
+            case MoveDirection.Right:
+                if (!IsSomethingRightOfMe(gridCoord) && gridCoord.x < GameMain.colCount - 1)
+                    PositionToGrid(new Vector2(gridCoord.x + 1, gridCoord.y));
+                else if (IsSomethingRightOfMe(gridCoord))
+                {
+                    if (!nRight.trappedRight)
+                    {
+                        nRight.eggState = EggState.Sliding;
+                        nRight.moveDirection = MoveDirection.Right;
+
+                        if (!nRight.IsSomethingRightOfMe(gridCoord) && nRight.gridCoord.x < GameMain.colCount - 1)
+                            nRight.PositionToGrid(new Vector2(nRight.gridCoord.x + 1, nRight.gridCoord.y));
+                    }
+                    else
+                    {
+                        trappedLeft = false; trappedRight = true;
+                    }
+                }
+                break;
+        }
     }
 
     #region Matching
